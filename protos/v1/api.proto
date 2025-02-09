@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package axon.api.v1;
+
+option go_package = "pkg/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+service axon {
+    rpc GetVersion(google.protobuf.Empty) returns (Version);
+    rpc Observe(ObserveInput) returns (google.protobuf.Empty);
+}
+
+message Version {
+    string semver                        = 1;
+    string git_commit_hash               = 2;
+    google.protobuf.Timestamp build_time = 3;
+    string go_version                    = 4;
+    string os                            = 5;
+    string arch                          = 6;
+}
+
+enum AssetType {
+    UNKNOWN = 0;
+    URL     = 1;
+    DOMAIN  = 2;
+    IP      = 3;
+}
+
+message ObserveInput {
+    AssetType asset_type              = 1;
+    string asset_id                   = 2;
+    google.protobuf.Struct attributes = 3;
+}
