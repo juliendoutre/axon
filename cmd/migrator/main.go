@@ -42,6 +42,7 @@ func main() {
 	logger.Info("Current migrations version", zap.Uint("version", version), zap.Bool("is_dirty", isDirty))
 
 	logger.Info("Running migration...")
+
 	if err := migrator.Up(); err != nil {
 		if !errors.Is(err, migrate.ErrNoChange) {
 			logger.Panic("Running migrations", zap.Error(err))
