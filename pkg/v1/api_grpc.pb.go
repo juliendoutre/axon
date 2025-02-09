@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AxonClient interface {
 	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error)
-	CreateObservation(ctx context.Context, in *CreateObservationInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Observe(ctx context.Context, in *ObserveInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type axonClient struct {
@@ -44,9 +44,9 @@ func (c *axonClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...
 	return out, nil
 }
 
-func (c *axonClient) CreateObservation(ctx context.Context, in *CreateObservationInput, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *axonClient) Observe(ctx context.Context, in *ObserveInput, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/axon.api.v1.axon/CreateObservation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/axon.api.v1.axon/Observe", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (c *axonClient) CreateObservation(ctx context.Context, in *CreateObservatio
 // for forward compatibility
 type AxonServer interface {
 	GetVersion(context.Context, *emptypb.Empty) (*Version, error)
-	CreateObservation(context.Context, *CreateObservationInput) (*emptypb.Empty, error)
+	Observe(context.Context, *ObserveInput) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAxonServer()
 }
 
@@ -69,8 +69,8 @@ type UnimplementedAxonServer struct {
 func (UnimplementedAxonServer) GetVersion(context.Context, *emptypb.Empty) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
 }
-func (UnimplementedAxonServer) CreateObservation(context.Context, *CreateObservationInput) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateObservation not implemented")
+func (UnimplementedAxonServer) Observe(context.Context, *ObserveInput) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Observe not implemented")
 }
 func (UnimplementedAxonServer) mustEmbedUnimplementedAxonServer() {}
 
@@ -103,20 +103,20 @@ func _Axon_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Axon_CreateObservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateObservationInput)
+func _Axon_Observe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ObserveInput)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AxonServer).CreateObservation(ctx, in)
+		return srv.(AxonServer).Observe(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/axon.api.v1.axon/CreateObservation",
+		FullMethod: "/axon.api.v1.axon/Observe",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AxonServer).CreateObservation(ctx, req.(*CreateObservationInput))
+		return srv.(AxonServer).Observe(ctx, req.(*ObserveInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -133,8 +133,8 @@ var Axon_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Axon_GetVersion_Handler,
 		},
 		{
-			MethodName: "CreateObservation",
-			Handler:    _Axon_CreateObservation_Handler,
+			MethodName: "Observe",
+			Handler:    _Axon_Observe_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

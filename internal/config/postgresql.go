@@ -19,8 +19,8 @@ func PostgresURL() *url.URL {
 	}
 }
 
-func MigrationsURL() url.URL {
-	return url.URL{
+func MigrationsURL() *url.URL {
+	return &url.URL{
 		Scheme: "file",
 		Path:   os.Getenv("MIGRATIONS_PATH"),
 	}

@@ -26,9 +26,7 @@ func main() {
 
 	defer func() { _ = logger.Sync() }()
 
-	migrationURL := config.MigrationsURL()
-
-	migrator, err := migrate.New(migrationURL.String(), config.PostgresURL().String())
+	migrator, err := migrate.New(config.MigrationsURL().String(), config.PostgresURL().String())
 	if err != nil {
 		logger.Panic("Creating migrator", zap.Error(err))
 	}

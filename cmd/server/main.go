@@ -38,7 +38,7 @@ var (
 	Arch          string
 )
 
-//nolint:funlen,cyclop
+//nolint:funlen
 func main() {
 	logger, err := zap.NewProductionConfig().Build()
 	if err != nil {
@@ -87,10 +87,7 @@ func main() {
 	}
 	defer pgPool.Close()
 
-	parsedBuildTime, err := time.Parse(time.RFC3339, BuildTime)
-	if err != nil {
-		logger.Panic("Parsing build time", zap.Error(err))
-	}
+	parsedBuildTime, _ := time.Parse(time.RFC3339, BuildTime)
 
 	server, err := server.New(
 		&v1.Version{
