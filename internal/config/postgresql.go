@@ -8,7 +8,7 @@ import (
 
 func PostgresURL() *url.URL {
 	pgQuery := url.Values{}
-	pgQuery.Add("sslmode", "require")
+	pgQuery.Add("sslmode", "disable")
 
 	return &url.URL{
 		Scheme:   "postgres",
