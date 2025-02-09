@@ -9,9 +9,7 @@ services:
     environment:
       POSTGRES_DB: $POSTGRES_DB
       POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-    secrets:
-      - postgres_password
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     networks:
       - axon-network
     ports:
@@ -57,6 +55,3 @@ networks:
   axon-network:
     driver: bridge
     name: axon-network
-secrets:
-  postgres_password:
-    environment: POSTGRES_PASSWORD

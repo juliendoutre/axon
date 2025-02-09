@@ -8,8 +8,11 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 
+	"github.com/MicahParks/keyfunc/v3"
+	"github.com/golang-jwt/jwt/v5"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/juliendoutre/axon/internal/config"
@@ -39,46 +42,65 @@ func main() {
 
 	defer func() { _ = logger.Sync() }()
 
-	creds, err := credentials.NewServerTLSFromFile("/etc/axon/server.crt.pem", "/etc/axon/server.key.pem")
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(nil)
+
+	fmt.Println(os.Getenv("SERVER_CERT_PATH"), os.Getenv("SERVER_KEY_PATH"))
+
+	creds, err := credentials.NewServerTLSFromFile(os.Getenv("SERVER_CERT_PATH"), os.Getenv("SERVER_KEY_PATH"))
 	if err != nil {
 		logger.Panic("Loading TLS credentials", zap.Error(err))
 	}
 
+	jwkStore, err := keyfunc.NewDefaultCtx(ctx, strings.Split(os.Getenv("SERVER_JWKS_URLS"), ","))
+	if err != nil {
+		logger.Panic("Starting JWKs store", zap.Error(err))
+	}
+
+	policy, err := os.ReadFile(os.Getenv("SERVER_POLICY_PATH"))
+	if err != nil {
+		logger.Panic("Loading policy", zap.Error(err))
+	}
+
+	authenticator := &server.Authenticator{
+		Parser: jwt.NewParser(),
+		Store:  jwkStore.KeyfuncCtx(ctx),
+		Policy: string(policy),
+	}
+
 	grpcOptions := []grpc.ServerOption{
 		grpc.Creds(creds),
-		grpc.ChainUnaryInterceptor(grpc_recovery.UnaryServerInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			authenticator.Authenticate,
+			grpc_recovery.UnaryServerInterceptor(),
+		),
 	}
 
 	grpcServer := grpc.NewServer(grpcOptions...)
 
-	healthgrpc.RegisterHealthServer(grpcServer, health.NewServer())
-	reflection.Register(grpcServer)
-
-	pgURL, err := config.PostgresURL()
-	if err != nil {
-		logger.Panic("Reading PostgresQL config", zap.Error(err))
-	}
-
-	ctx := context.Background()
-
-	pgPool, err := pgxpool.New(ctx, pgURL.String())
+	pgPool, err := pgxpool.New(ctx, config.PostgresURL().String())
 	if err != nil {
 		logger.Panic("Connecting to DB", zap.Error(err))
 	}
 	defer pgPool.Close()
 
-	server, err := server.New(&v1.Version{
-		GoVersion: GoVersion,
-		Os:        Os,
-		Arch:      Arch,
-	}, pgPool)
+	server, err := server.New(
+		&v1.Version{
+			GoVersion: GoVersion,
+			Os:        Os,
+			Arch:      Arch,
+		},
+		pgPool,
+	)
 	if err != nil {
 		logger.Panic("Creating server", zap.Error(err))
 	}
 
+	healthgrpc.RegisterHealthServer(grpcServer, health.NewServer())
+	reflection.Register(grpcServer)
 	v1.RegisterAxonServer(grpcServer, server)
 
-	grpcPort, err := strconv.ParseInt(os.Getenv("GRPC_PORT"), 10, 64)
+	grpcPort, err := strconv.ParseInt(os.Getenv("SERVER_PORT"), 10, 64)
 	if err != nil {
 		logger.Panic("Parsing gRPC port", zap.Error(err))
 	}
