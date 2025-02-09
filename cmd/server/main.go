@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -24,16 +25,20 @@ import (
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 //nolint:gochecknoglobals
 var (
-	GoVersion string
-	Os        string //nolint:varnamelen
-	Arch      string
+	Semver        string
+	GitCommitHash string
+	BuildTime     string
+	GoVersion     string
+	Os            string //nolint:varnamelen
+	Arch          string
 )
 
-//nolint:funlen
+//nolint:funlen,cyclop
 func main() {
 	logger, err := zap.NewProductionConfig().Build()
 	if err != nil {
@@ -44,8 +49,6 @@ func main() {
 
 	ctx, cancel := context.WithCancelCause(context.Background())
 	defer cancel(nil)
-
-	fmt.Println(os.Getenv("SERVER_CERT_PATH"), os.Getenv("SERVER_KEY_PATH"))
 
 	creds, err := credentials.NewServerTLSFromFile(os.Getenv("SERVER_CERT_PATH"), os.Getenv("SERVER_KEY_PATH"))
 	if err != nil {
@@ -84,11 +87,19 @@ func main() {
 	}
 	defer pgPool.Close()
 
+	parsedBuildTime, err := time.Parse(time.RFC3339, BuildTime)
+	if err != nil {
+		logger.Panic("Parsing build time", zap.Error(err))
+	}
+
 	server, err := server.New(
 		&v1.Version{
-			GoVersion: GoVersion,
-			Os:        Os,
-			Arch:      Arch,
+			Semver:        Semver,
+			GitCommitHash: GitCommitHash,
+			BuildTime:     timestamppb.New(parsedBuildTime),
+			GoVersion:     GoVersion,
+			Os:            Os,
+			Arch:          Arch,
 		},
 		pgPool,
 	)
