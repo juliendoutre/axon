@@ -33,7 +33,7 @@ func main() {
 	defer migrator.Close()
 
 	version, isDirty, err := migrator.Version()
-	if err != nil && !errors.Is(err, migrate.ErrInvalidVersion) {
+	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
 		logger.Panic("Getting migrations version", zap.Error(err))
 	}
 
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	version, isDirty, err = migrator.Version()
-	if err != nil && !errors.Is(err, migrate.ErrInvalidVersion) {
+	if err != nil {
 		logger.Panic("Getting migrations version", zap.Error(err))
 	}
 

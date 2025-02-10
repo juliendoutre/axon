@@ -42,26 +42,13 @@ mkcert -cert-file ./deploy/dev/server.crt.pem -key-file ./deploy/dev/server.key.
 
 ### Run locally
 
-Start dependencies and the server:
 ```shell
-export $(cat ./deploy/dev/.env | xargs)
 docker compose -f ./deploy/dev/docker-compose.yaml up -d --build
-POSTGRES_HOST=localhost go run ./cmd/migrator
-POSTGRES_HOST=localhost go run ./cmd/server
-```
-
-In another shell, interact with the server:
-```shell
-export $(cat ./deploy/dev/.env | xargs)
-grpcurl localhost:${SERVER_PORT} list
-grpcurl localhost:${SERVER_PORT} describe axon.api.v1.axon
-export TEST_JWT=$(curl -d "client_id=axon" -d "client_secret=ZU4ZKQ6H1sWT6SeB7uh3exUACThJ2Ma3" -d "username=admin" -d "password=${KEYCLOAK_ADMIN_PASSWORD}" -d "grant_type=password" "http://localhost:${KEYCLOAK_HTTP_PORT}/realms/master/protocol/openid-connect/token" | jq -c -r '.access_token')
-grpcurl -H authorization:"Bearer ${TEST_JWT}" localhost:${SERVER_PORT} axon.api.v1.axon/GetVersion
-grpcurl -H authorization:"Bearer ${TEST_JWT}" -d '{"asset_type": 2, "asset_id": "google.com", "attributes": {"test": "a"}}' localhost:${SERVER_PORT} axon.api.v1.axon/Observe
-```
-
-Stop dependencies with:
-```shell
+grpcurl localhost:8000 list
+grpcurl localhost:8000 describe axon.api.v1.axon
+export TEST_JWT=$(curl -d "client_id=axon" -d "client_secret=ZU4ZKQ6H1sWT6SeB7uh3exUACThJ2Ma3" -d "username=admin" -d "password=${KEYCLOAK_ADMIN_PASSWORD}" -d "grant_type=password" "http://localhost:7080/realms/master/protocol/openid-connect/token" | jq -c -r '.access_token')
+grpcurl -H authorization:"Bearer ${TEST_JWT}" localhost:8000 axon.api.v1.axon/GetVersion
+grpcurl -H authorization:"Bearer ${TEST_JWT}" -d '{"asset_type": 2, "asset_id": "google.com", "attributes": {"test": "a"}}' localhost:8000 axon.api.v1.axon/Observe
 docker compose -f ./deploy/dev/docker-compose.yaml stop
 docker compose -f ./deploy/dev/docker-compose.yaml rm
 ```

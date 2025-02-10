@@ -38,6 +38,7 @@ services:
       KC_DB_URL_HOST: $POSTGRES_HOST
       KC_DB_URL_PORT: $POSTGRES_PORT
       KC_DB_URL_DATABASE: $POSTGRES_DB
+      KC_DB_SCHEMA: $KEYCLOAK_SCHEMA
       KC_DB_USERNAME: $POSTGRES_USER
       KC_DB_PASSWORD: $POSTGRES_PASSWORD
     networks:
@@ -51,6 +52,71 @@ services:
       interval: 15s
       timeout: 2s
       retries: 15
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+  migrator:
+    build:
+      context: ../..
+      dockerfile: ./images/migrator.Dockerfile
+    init: true
+    environment:
+      POSTGRES_HOST: $POSTGRES_HOST
+      POSTGRES_PORT: $POSTGRES_PORT
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      MIGRATIONS_PATH: $MIGRATIONS_PATH
+    volumes:
+      - ../../sql:$MIGRATIONS_PATH:ro
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - axon-network
+  server:
+    build:
+      context: ../..
+      dockerfile: ./images/server.Dockerfile
+    init: true
+    restart: unless-stopped
+    container_name: server
+    hostname: server
+    environment:
+      POSTGRES_HOST: $POSTGRES_HOST
+      POSTGRES_PORT: $POSTGRES_PORT
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      SERVER_PORT: $SERVER_PORT
+      SERVER_CERT_PATH: $SERVER_CERT_PATH
+      SERVER_KEY_PATH: $SERVER_KEY_PATH
+      SERVER_JWKS_URLS: $SERVER_JWKS_URLS
+      SERVER_POLICY_PATH: $SERVER_POLICY_PATH
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./server.crt.pem
+        target: /etc/axon/server/server.crt.pem
+      - type: bind
+        read_only: true
+        source: ./server.key.pem
+        target: /etc/axon/server/server.key.pem
+      - type: bind
+        read_only: true
+        source: ./policy.rego
+        target: /etc/axon/server/policy.rego
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgresql:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - axon-network
 networks:
   axon-network:
     driver: bridge
