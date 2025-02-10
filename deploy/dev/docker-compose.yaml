@@ -47,11 +47,6 @@ services:
       - $KEYCLOAK_HTTP_PORT:$KEYCLOAK_HTTP_PORT
       - $KEYCLOAK_HTTPS_PORT:$KEYCLOAK_HTTPS_PORT
     command: [ "start-dev", "--http-port", "$KEYCLOAK_HTTP_PORT", "--https-port", "$KEYCLOAK_HTTPS_PORT" ]
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:$KEYCLOAK_HTTP_PORT/health/ready" ]
-      interval: 15s
-      timeout: 2s
-      retries: 15
     depends_on:
       postgresql:
         condition: service_healthy
@@ -114,7 +109,7 @@ services:
       postgresql:
         condition: service_healthy
       keycloak:
-        condition: service_healthy
+        condition: service_started
     networks:
       - axon-network
 networks:
