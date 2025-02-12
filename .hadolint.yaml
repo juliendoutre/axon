@@ -5,8 +5,9 @@ label-schema:
   org.opencontainers.image.title: text
   org.opencontainers.image.url: url
   org.opencontainers.image.documentation: url
-  org.opencontainers.image.source: url
+  org.opencontainers.image.source: text
   org.opencontainers.image.licenses: text
+  org.opencontainers.revision: text
 trustedRegistries:
   - index.docker.io
   - gcr.io

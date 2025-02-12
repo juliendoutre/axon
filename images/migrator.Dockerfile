@@ -27,8 +27,9 @@ LABEL org.opencontainers.image.authors Julien Doutre <jul.doutre@gmail.com>
 LABEL org.opencontainers.image.title axon.migrator
 LABEL org.opencontainers.image.url https://github.com/juliendoutre/axon
 LABEL org.opencontainers.image.documentation https://github.com/juliendoutre/axon
-LABEL org.opencontainers.image.source https://github.com/juliendoutre/axon
+LABEL org.opencontainers.image.source https://github.com/juliendoutre/axon/tree/${GIT_COMMIT_SHA}/images/migrator.Dockerfile
 LABEL org.opencontainers.image.licenses MIT
+LABEL org.opencontainers.revision ${GIT_COMMIT_SHA}
 
 WORKDIR /
 
