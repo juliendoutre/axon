@@ -65,6 +65,7 @@ func (s *Server) CountObservations(
 	}, nil
 }
 
+//nolint:funlen
 func (s *Server) ListObservations(
 	ctx context.Context,
 	input *v1.ListObservationsInput,
@@ -88,29 +89,27 @@ WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp DESC OFFSET $3 LIMI
 	observations := []*v1.Observation{}
 
 	for rows.Next() {
-		var id, assetType, assetID string
+		observation := &v1.Observation{
+			Attributes: &structpb.Struct{},
+			Claims:     &structpb.Struct{},
+		}
+
 		var timestamp time.Time
+
 		var attributes, claims []byte
 
 		if err := rows.Scan(
-			&id,
+			&observation.Id,
 			&timestamp,
-			&assetType,
-			&assetID,
+			&observation.AssetType,
+			&observation.AssetId,
 			&attributes,
 			&claims,
 		); err != nil {
 			return nil, status.Errorf(codes.Internal, "scanning observation")
 		}
 
-		observation := &v1.Observation{
-			Id:         id,
-			Timestamp:  timestamppb.New(timestamp),
-			AssetType:  assetType,
-			AssetId:    assetID,
-			Attributes: &structpb.Struct{},
-			Claims:     &structpb.Struct{},
-		}
+		observation.Timestamp = timestamppb.New(timestamp)
 
 		if err := observation.Attributes.UnmarshalJSON(attributes); err != nil { //nolint:protogetter
 			return nil, status.Errorf(codes.Internal, "scanning observation")
@@ -131,7 +130,7 @@ WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp DESC OFFSET $3 LIMI
 		Observations: observations,
 	}
 
-	if uint32(len(observations)) == input.GetPageSize() {
+	if len(observations) == int(input.GetPageSize()) {
 		output.NextPage = input.GetPage() + 1
 	}
 
