@@ -12,6 +12,7 @@ service axon {
     rpc GetVersion(google.protobuf.Empty) returns (Version);
     rpc Observe(ObserveInput) returns (google.protobuf.Empty);
     rpc CountObservations(CountObservationsInput) returns (CountObservationsOutput);
+    rpc ListObservations(ListObservationsInput) returns (ListObservationsOutput);
 }
 
 message Version {
@@ -23,15 +24,8 @@ message Version {
     string arch                          = 6;
 }
 
-enum AssetType {
-    UNKNOWN = 0;
-    URL     = 1;
-    DOMAIN  = 2;
-    IP      = 3;
-}
-
 message ObserveInput {
-    AssetType asset_type              = 1;
+    string asset_type                 = 1;
     string asset_id                   = 2;
     google.protobuf.Struct attributes = 3;
 }
@@ -43,4 +37,25 @@ message CountObservationsInput {
 
 message CountObservationsOutput {
     uint64 count = 1;
+}
+
+message ListObservationsInput {
+    google.protobuf.Timestamp from = 1;
+    google.protobuf.Timestamp to   = 2;
+    uint32 page                    = 3;
+    uint32 page_size               = 4;
+}
+
+message ListObservationsOutput {
+    repeated Observation observations = 1;
+    uint32 next_page                  = 2;
+}
+
+message Observation {
+    string id                           = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    string asset_type                   = 3;
+    string asset_id                     = 4;
+    google.protobuf.Struct attributes   = 5;
+    google.protobuf.Struct claims       = 6;
 }

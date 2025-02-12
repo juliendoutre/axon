@@ -26,6 +26,7 @@ type AxonClient interface {
 	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error)
 	Observe(ctx context.Context, in *ObserveInput, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CountObservations(ctx context.Context, in *CountObservationsInput, opts ...grpc.CallOption) (*CountObservationsOutput, error)
+	ListObservations(ctx context.Context, in *ListObservationsInput, opts ...grpc.CallOption) (*ListObservationsOutput, error)
 }
 
 type axonClient struct {
@@ -63,6 +64,15 @@ func (c *axonClient) CountObservations(ctx context.Context, in *CountObservation
 	return out, nil
 }
 
+func (c *axonClient) ListObservations(ctx context.Context, in *ListObservationsInput, opts ...grpc.CallOption) (*ListObservationsOutput, error) {
+	out := new(ListObservationsOutput)
+	err := c.cc.Invoke(ctx, "/axon.api.v1.axon/ListObservations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AxonServer is the server API for Axon service.
 // All implementations must embed UnimplementedAxonServer
 // for forward compatibility
@@ -70,6 +80,7 @@ type AxonServer interface {
 	GetVersion(context.Context, *emptypb.Empty) (*Version, error)
 	Observe(context.Context, *ObserveInput) (*emptypb.Empty, error)
 	CountObservations(context.Context, *CountObservationsInput) (*CountObservationsOutput, error)
+	ListObservations(context.Context, *ListObservationsInput) (*ListObservationsOutput, error)
 	mustEmbedUnimplementedAxonServer()
 }
 
@@ -85,6 +96,9 @@ func (UnimplementedAxonServer) Observe(context.Context, *ObserveInput) (*emptypb
 }
 func (UnimplementedAxonServer) CountObservations(context.Context, *CountObservationsInput) (*CountObservationsOutput, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CountObservations not implemented")
+}
+func (UnimplementedAxonServer) ListObservations(context.Context, *ListObservationsInput) (*ListObservationsOutput, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListObservations not implemented")
 }
 func (UnimplementedAxonServer) mustEmbedUnimplementedAxonServer() {}
 
@@ -153,6 +167,24 @@ func _Axon_CountObservations_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Axon_ListObservations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListObservationsInput)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AxonServer).ListObservations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/axon.api.v1.axon/ListObservations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AxonServer).ListObservations(ctx, req.(*ListObservationsInput))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Axon_ServiceDesc is the grpc.ServiceDesc for Axon service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -171,6 +203,10 @@ var Axon_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CountObservations",
 			Handler:    _Axon_CountObservations_Handler,
+		},
+		{
+			MethodName: "ListObservations",
+			Handler:    _Axon_ListObservations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
