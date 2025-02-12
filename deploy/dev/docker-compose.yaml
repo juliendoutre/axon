@@ -103,6 +103,10 @@ services:
         read_only: true
         source: ./policy.rego
         target: /etc/axon/server/policy.rego
+    ports:
+      - $SERVER_PORT:$SERVER_PORT
+    networks:
+      - axon-network
     depends_on:
       migrator:
         condition: service_completed_successfully
@@ -110,8 +114,6 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
-    networks:
-      - axon-network
 networks:
   axon-network:
     driver: bridge

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	v1 "github.com/juliendoutre/axon/pkg/v1"
@@ -39,4 +40,22 @@ func (s *Server) Observe(ctx context.Context, input *v1.ObserveInput) (*emptypb.
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *Server) CountObservations(ctx context.Context, input *v1.CountObservationsInput) (*v1.CountObservationsOutput, error) {
+	row := s.pg.QueryRow(
+		ctx,
+		"SELECT COUNT(*) FROM axon.observations WHERE timestamp >= $1 AND timestamp <= $2;",
+		input.GetFrom().AsTime().Format(time.RFC3339),
+		input.GetTo().AsTime().Format(time.RFC3339),
+	)
+
+	var count uint64
+	if err := row.Scan(&count); err != nil {
+		return nil, status.Errorf(codes.Internal, "counting observations")
+	}
+
+	return &v1.CountObservationsOutput{
+		Count: count,
+	}, nil
 }

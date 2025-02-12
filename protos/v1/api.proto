@@ -11,6 +11,7 @@ import "google/protobuf/struct.proto";
 service axon {
     rpc GetVersion(google.protobuf.Empty) returns (Version);
     rpc Observe(ObserveInput) returns (google.protobuf.Empty);
+    rpc CountObservations(CountObservationsInput) returns (CountObservationsOutput);
 }
 
 message Version {
@@ -33,4 +34,13 @@ message ObserveInput {
     AssetType asset_type              = 1;
     string asset_id                   = 2;
     google.protobuf.Struct attributes = 3;
+}
+
+message CountObservationsInput {
+    google.protobuf.Timestamp from = 1;
+    google.protobuf.Timestamp to   = 2;
+}
+
+message CountObservationsOutput {
+    uint64 count = 1;
 }
