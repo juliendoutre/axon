@@ -71,6 +71,47 @@ services:
         condition: service_healthy
     networks:
       - axon-network
+  temporal:
+    image: index.docker.io/temporalio/auto-setup:1.26.2@sha256:e9245820522233ec6a59ad69c6512ae4450705ee02bf6894fc61ba13b238c1c0
+    init: true
+    restart: unless-stopped
+    container_name: $TEMPORAL_HOST
+    hostname: $TEMPORAL_HOST
+    environment:
+      DB: postgres12_pgx
+      POSTGRES_SEEDS: $POSTGRES_HOST
+      DB_PORT: $POSTGRES_PORT
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PWD: $POSTGRES_PASSWORD
+      DYNAMIC_CONFIG_FILE_PATH: config.yaml
+    networks:
+      - axon-network
+    ports:
+      - $TEMPORAL_PORT:$TEMPORAL_PORT
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./temporal.yaml
+        target: /etc/temporal/config.yaml
+    depends_on:
+      postgresql:
+        condition: service_healthy
+  temporal-ui:
+    image: index.docker.io/temporalio/ui:2.34.0@sha256:cb17ea423d76a8a19a269d0bcd81fc12eee1f6365acd2a56b590dafb35696a95
+    init: true
+    restart: unless-stopped
+    container_name: $TEMPORAL_UI_HOST
+    hostname: $TEMPORAL_UI_HOST
+    environment:
+      TEMPORAL_ADDRESS: $TEMPORAL_HOST:$TEMPORAL_PORT
+      TEMPORAL_CORS_ORIGINS: http://localhost:3000 # TODO
+    networks:
+      - axon-network
+    ports:
+      - $TEMPORAL_UI_PORT:$TEMPORAL_UI_PORT
+    depends_on:
+      temporal:
+        condition: service_started
   server:
     build:
       context: ../..
