@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/juliendoutre/axon/internal/extraction"
 	v1 "github.com/juliendoutre/axon/pkg/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -30,15 +31,35 @@ func (s *Server) Observe(ctx context.Context, input *v1.ObserveInput) (*emptypb.
 		return nil, status.Errorf(codes.Internal, "serializing claims")
 	}
 
-	if _, err := s.pg.Exec(
+	var observationID string
+
+	if err := s.pg.QueryRow(
 		ctx,
-		"INSERT INTO axon.observations (asset_type, asset_id, attributes, observer_claims) VALUES ($1, $2, $3, $4);",
+		`INSERT INTO axon.observations (asset_type, asset_id, attributes, observer_claims)
+VALUES ($1, $2, $3, $4)
+RETURNING id;`,
 		input.GetAssetType(),
 		input.GetAssetId(),
 		serializedAttributes,
 		serializedClaims,
-	); err != nil {
+	).Scan(&observationID); err != nil {
 		return nil, status.Errorf(codes.Internal, "inserting observation")
+	}
+
+	for _, candidate := range extraction.ExtractCandidatesFromStruct(input.GetAttributes(), "$") {
+		for _, asset := range extraction.ListMatches(candidate) {
+			if _, err := s.pg.Exec(
+				ctx,
+				`INSERT INTO axon.extracted_assets (observation_id, attributes_path, asset_type, asset_id)
+VALUES ($1, $2, $3, $4);`,
+				observationID,
+				candidate.Path,
+				asset.Type,
+				asset.ID,
+			); err != nil {
+				return nil, status.Errorf(codes.Internal, "inserting related assets")
+			}
+		}
 	}
 
 	return &emptypb.Empty{}, nil
@@ -74,7 +95,9 @@ func (s *Server) ListObservations(
 		ctx,
 		`SELECT id, timestamp, asset_type, asset_id, attributes, observer_claims
 FROM axon.observations
-WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp DESC OFFSET $3 LIMIT $4;`,
+WHERE timestamp >= $1 AND timestamp <= $2
+ORDER BY timestamp DESC
+OFFSET $3 LIMIT $4;`,
 		input.GetFrom().AsTime().Format(time.RFC3339),
 		input.GetTo().AsTime().Format(time.RFC3339),
 		input.GetPage()*input.GetPageSize(),
