@@ -18,10 +18,15 @@ type Authenticator struct {
 	Policy string
 }
 
+type AuthenticationContext struct {
+	Claims jwt.Claims
+	Method string
+}
+
 func (a *Authenticator) Authenticate(
 	ctx context.Context,
 	req any,
-	_ *grpc.UnaryServerInfo,
+	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (any, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -52,7 +57,10 @@ func (a *Authenticator) Authenticate(
 	policyEvaluation, err := rego.New(
 		rego.Query("data.authz.allowed"),
 		rego.Module("policy.rego", a.Policy),
-		rego.Input(jwtToken.Claims),
+		rego.Input(AuthenticationContext{
+			Claims: jwtToken.Claims,
+			Method: info.FullMethod,
+		}),
 	).Eval(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "policy evaluation")
