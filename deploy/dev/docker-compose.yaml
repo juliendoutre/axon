@@ -24,8 +24,8 @@ services:
     image: quay.io/keycloak/keycloak:26.1@sha256:75ca4b2e4e954ff89c20ba8e5aeeef3bd0d250847fedb1c9752949823b319dda
     init: true
     restart: unless-stopped
-    container_name: $KEYCLOAK_HOST
-    hostname: $KEYCLOAK_HOST
+    container_name: keycloak
+    hostname: keycloak
     environment:
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: $KEYCLOAK_HTTP_PORT
@@ -100,15 +100,36 @@ services:
     image: index.docker.io/temporalio/ui:2.34.0@sha256:cb17ea423d76a8a19a269d0bcd81fc12eee1f6365acd2a56b590dafb35696a95
     init: true
     restart: unless-stopped
-    container_name: $TEMPORAL_UI_HOST
-    hostname: $TEMPORAL_UI_HOST
+    container_name: temporal-ui
+    hostname: temporal-ui
     environment:
       TEMPORAL_ADDRESS: $TEMPORAL_HOST:$TEMPORAL_PORT
-      TEMPORAL_CORS_ORIGINS: http://localhost:3000 # TODO
     networks:
       - axon-network
     ports:
       - $TEMPORAL_UI_PORT:$TEMPORAL_UI_PORT
+    depends_on:
+      temporal:
+        condition: service_started
+  worker:
+    build:
+      context: ../..
+      dockerfile: ./images/worker.Dockerfile
+    init: true
+    restart: unless-stopped
+    container_name: worker
+    hostname: worker
+    environment:
+      TEMPORAL_HOST: $TEMPORAL_HOST
+      TEMPORAL_PORT: $TEMPORAL_PORT
+      TEMPORAL_TASK_QUEUE: $TEMPORAL_TASK_QUEUE
+      POSTGRES_HOST: $POSTGRES_HOST
+      POSTGRES_PORT: $POSTGRES_PORT
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+    networks:
+      - axon-network
     depends_on:
       temporal:
         condition: service_started
@@ -154,6 +175,8 @@ services:
       postgresql:
         condition: service_healthy
       keycloak:
+        condition: service_started
+      worker:
         condition: service_started
 networks:
   axon-network:

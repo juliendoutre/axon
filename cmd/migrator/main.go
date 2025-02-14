@@ -13,9 +13,12 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	GoVersion string
-	Os        string
-	Arch      string
+	Semver        string
+	GitCommitHash string
+	BuildTime     string
+	GoVersion     string
+	Os            string
+	Arch          string
 )
 
 func main() {

@@ -10,31 +10,31 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG GO_VERSION
 
-WORKDIR /axon/migrator
+WORKDIR /axon/worker
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY ./cmd/migrator ./cmd/migrator
+COPY ./cmd/worker ./cmd/worker
 COPY ./pkg ./pkg
 COPY ./internal ./internal
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w -X main.GoVersion=$GO_VERSION -X main.Os=$TARGETOS -X main.Arch=$TARGETARCH" -o /migrator ./cmd/migrator
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w -X main.GoVersion=$GO_VERSION -X main.Os=$TARGETOS -X main.Arch=$TARGETARCH" -o /worker ./cmd/worker
 
 FROM --platform=$TARGETPLATFORM gcr.io/distroless/base-debian$DEBIAN_VERSION:latest AS runner
 
 LABEL org.opencontainers.image.authors Julien Doutre <jul.doutre@gmail.com>
-LABEL org.opencontainers.image.title axon.migrator
+LABEL org.opencontainers.image.title axon.worker
 LABEL org.opencontainers.image.url https://github.com/juliendoutre/axon
 LABEL org.opencontainers.image.documentation https://github.com/juliendoutre/axon
-LABEL org.opencontainers.image.source https://github.com/juliendoutre/axon/tree/${GIT_COMMIT_SHA}/images/migrator.Dockerfile
+LABEL org.opencontainers.image.source https://github.com/juliendoutre/axon/tree/${GIT_COMMIT_SHA}/images/worker.Dockerfile
 LABEL org.opencontainers.image.licenses MIT
 LABEL org.opencontainers.revision ${GIT_COMMIT_SHA}
 
 WORKDIR /
 
-COPY --from=builder /migrator /migrator
+COPY --from=builder /worker /worker
 
 USER nonroot:nonroot
 
-ENTRYPOINT ["/migrator"]
+ENTRYPOINT ["/worker"]
