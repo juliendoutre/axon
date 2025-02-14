@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 	"os"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/juliendoutre/axon/internal/config"
+	aworker "github.com/juliendoutre/axon/internal/worker"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 	"go.uber.org/zap"
@@ -28,6 +32,17 @@ func main() {
 
 	defer func() { _ = logger.Sync() }()
 
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(nil)
+
+	pgPool, err := pgxpool.New(ctx, config.PostgresURL().String())
+	if err != nil {
+		logger.Panic("Connecting to DB", zap.Error(err))
+	}
+	defer pgPool.Close()
+
+	axonWorker := aworker.New(pgPool)
+
 	temporalClient, err := client.Dial(client.Options{
 		HostPort: net.JoinHostPort(os.Getenv("TEMPORAL_HOST"), os.Getenv("TEMPORAL_PORT")),
 	})
@@ -37,6 +52,9 @@ func main() {
 	defer temporalClient.Close()
 
 	temporalWorker := worker.New(temporalClient, os.Getenv("TEMPORAL_TASK_QUEUE"), worker.Options{})
+	temporalWorker.RegisterWorkflow(axonWorker.ExtractAssetsFromObservation)
+	temporalWorker.RegisterActivity(axonWorker.GetObservationAttributes)
+	temporalWorker.RegisterActivity(axonWorker.InsertExtractedAsset)
 
 	if err := temporalWorker.Run(worker.InterruptCh()); err != nil {
 		logger.Panic("Starting Temporal worker", zap.Error(err))

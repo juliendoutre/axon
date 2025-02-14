@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/juliendoutre/axon/internal/extraction"
 	v1 "github.com/juliendoutre/axon/pkg/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -44,22 +43,6 @@ RETURNING id;`,
 		serializedClaims,
 	).Scan(&observationID); err != nil {
 		return nil, status.Errorf(codes.Internal, "inserting observation")
-	}
-
-	for _, candidate := range extraction.ExtractCandidatesFromStruct(input.GetAttributes(), "$") {
-		for _, asset := range extraction.ListMatches(candidate) {
-			if _, err := s.pg.Exec(
-				ctx,
-				`INSERT INTO axon.extracted_assets (observation_id, attributes_path, asset_type, asset_id)
-VALUES ($1, $2, $3, $4);`,
-				observationID,
-				candidate.Path,
-				asset.Type,
-				asset.ID,
-			); err != nil {
-				return nil, status.Errorf(codes.Internal, "inserting related assets")
-			}
-		}
 	}
 
 	return &emptypb.Empty{}, nil
