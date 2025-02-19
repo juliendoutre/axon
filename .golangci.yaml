@@ -1,7 +1,7 @@
 linters:
   enable-all: true
   disable:
-    - exportloopref # Deprecated
+    - tenv # Deprecated
     - exhaustruct # Too noisy
 linters-settings:
   depguard:
