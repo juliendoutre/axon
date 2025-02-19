@@ -9,6 +9,9 @@ FROM --platform=$BUILDPLATFORM index.docker.io/golang:$GO_VERSION-alpine$ALPINE_
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_VERSION
+ARG SEMVER
+ARG GIT_COMMIT_SHA
+ARG BUILD_TIME
 
 WORKDIR /axon/server
 
@@ -19,7 +22,7 @@ COPY ./cmd/server ./cmd/server
 COPY ./pkg ./pkg
 COPY ./internal ./internal
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w -X main.GoVersion=$GO_VERSION -X main.Os=$TARGETOS -X main.Arch=$TARGETARCH" -o /server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w -X main.GoVersion=$GO_VERSION -X main.Os=$TARGETOS -X main.Arch=$TARGETARCH -X main.Semver=$SEMVER -X main.GitCommitHash=$GIT_COMMIT_SHA -X main.BuildTime=$BUILD_TIME" -o /server ./cmd/server
 
 FROM --platform=$TARGETPLATFORM gcr.io/distroless/base-debian$DEBIAN_VERSION:latest AS runner
 
