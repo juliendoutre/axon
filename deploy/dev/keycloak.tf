@@ -28,12 +28,14 @@ data "keycloak_realm" "master" {
 }
 
 resource "keycloak_openid_client" "openid_client" {
-  realm_id  = data.keycloak_realm.master.id
-  client_id = "axon"
-  name      = "axon"
-  enabled   = true
-
-  access_type = "CONFIDENTIAL"
+  realm_id                     = data.keycloak_realm.master.id
+  client_id                    = "axon"
+  name                         = "axon"
+  enabled                      = true
+  access_type                  = "CONFIDENTIAL"
+  standard_flow_enabled        = true
+  direct_access_grants_enabled = true
+  valid_redirect_uris          = ["/*"]
 }
 
 output "openid_client_secret" {

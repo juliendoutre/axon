@@ -156,15 +156,15 @@ services:
       - type: bind
         read_only: true
         source: ./server.crt.pem
-        target: /etc/axon/server/server.crt.pem
+        target: $SERVER_CERT_PATH
       - type: bind
         read_only: true
         source: ./server.key.pem
-        target: /etc/axon/server/server.key.pem
+        target: $SERVER_KEY_PATH
       - type: bind
         read_only: true
         source: ./policy.rego
-        target: /etc/axon/server/policy.rego
+        target: $SERVER_POLICY_PATH
     ports:
       - $SERVER_PORT:$SERVER_PORT
     networks:
