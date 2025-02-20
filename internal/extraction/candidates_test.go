@@ -1,18 +1,20 @@
-package extraction
+package extraction_test
 
 import (
 	"testing"
 
+	"github.com/juliendoutre/axon/internal/extraction"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+//nolint:funlen
 func TestCandidates(t *testing.T) {
 	t.Parallel()
 
 	for testCaseName, testCase := range map[string]struct {
 		Value              *structpb.Value
-		ExpectedCandidates []Candidate
+		ExpectedCandidates []extraction.Candidate
 	}{
 		"empty": {
 			Value:              &structpb.Value{},
@@ -32,7 +34,7 @@ func TestCandidates(t *testing.T) {
 		},
 		"string": {
 			Value:              structpb.NewStringValue("test"),
-			ExpectedCandidates: []Candidate{{Path: "$", Value: "test"}},
+			ExpectedCandidates: []extraction.Candidate{{Path: "$", Value: "test"}},
 		},
 		"nested": {
 			Value: structpb.NewStructValue(&structpb.Struct{
@@ -40,7 +42,7 @@ func TestCandidates(t *testing.T) {
 					Fields: map[string]*structpb.Value{"b": structpb.NewStringValue("test")},
 				})},
 			}),
-			ExpectedCandidates: []Candidate{{Path: "$.a.b", Value: "test"}},
+			ExpectedCandidates: []extraction.Candidate{{Path: "$.a.b", Value: "test"}},
 		},
 		"list": {
 			Value: structpb.NewStructValue(&structpb.Struct{
@@ -56,7 +58,7 @@ func TestCandidates(t *testing.T) {
 					},
 				})},
 			}),
-			ExpectedCandidates: []Candidate{
+			ExpectedCandidates: []extraction.Candidate{
 				{Path: "$.a.b", Value: "test"},
 				{Path: "$.a.c[0]", Value: "hello"},
 				{Path: "$.a.c[3]", Value: "world"},
@@ -66,7 +68,7 @@ func TestCandidates(t *testing.T) {
 		t.Run(testCaseName, func(t *testing.T) {
 			t.Parallel()
 
-			actualCandidates := ExtractCandidatesFromValue(testCase.Value, "$")
+			actualCandidates := extraction.ExtractCandidatesFromValue(testCase.Value, "$")
 
 			assert.ElementsMatch(t, testCase.ExpectedCandidates, actualCandidates)
 		})
