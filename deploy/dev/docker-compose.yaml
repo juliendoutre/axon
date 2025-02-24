@@ -20,38 +20,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.1@sha256:75ca4b2e4e954ff89c20ba8e5aeeef3bd0d250847fedb1c9752949823b319dda
-    init: true
-    restart: unless-stopped
-    container_name: keycloak
-    hostname: keycloak
-    environment:
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: $KEYCLOAK_HTTP_PORT
-      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: $KEYCLOAK_ADMIN_PASSWORD
-      KC_HEALTH_ENABLED: "true"
-      KC_LOG_LEVEL: info
-      KC_DB: postgres
-      KC_DB_URL_HOST: $POSTGRES_HOST
-      KC_DB_URL_PORT: $POSTGRES_PORT
-      KC_DB_URL_DATABASE: $POSTGRES_DB
-      KC_DB_SCHEMA: $KEYCLOAK_SCHEMA
-      KC_DB_USERNAME: $POSTGRES_USER
-      KC_DB_PASSWORD: $POSTGRES_PASSWORD
-    networks:
-      - axon-network
-    ports:
-      - $KEYCLOAK_HTTP_PORT:$KEYCLOAK_HTTP_PORT
-      - $KEYCLOAK_HTTPS_PORT:$KEYCLOAK_HTTPS_PORT
-    command: [ "start-dev", "--http-port", "$KEYCLOAK_HTTP_PORT", "--https-port", "$KEYCLOAK_HTTPS_PORT" ]
-    depends_on:
-      postgresql:
-        condition: service_healthy
-      migrator:
-        condition: service_completed_successfully
   migrator:
     build:
       context: ../..
@@ -174,8 +142,6 @@ services:
         condition: service_completed_successfully
       postgresql:
         condition: service_healthy
-      keycloak:
-        condition: service_started
       worker:
         condition: service_started
 networks:

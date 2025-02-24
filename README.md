@@ -2,53 +2,57 @@
 
 ## Development
 
-### Generate the protobuf code
+### Setup
 
 ```shell
-brew install protobuf
-protoc -Iprotos/v1 --go_out=. --go-grpc_out=. ./protos/v1/api.proto
+make install
+```
+
+### Regenerate the protobuf code
+
+```shell
+make proto
 ```
 
 ### Add a SQL migration
 
 ```shell
-brew install golang-migrate
-migrate create -dir ./sql -ext .sql <MIGRATION_NAME>
+make migrate MIGRATION_NAME=...
 ```
 
 ### Lint the code
 
 ```shell
-brew install golangci-lint hadolint sqlfluff
-golangci-lint run
-hadolint ./images/*.Dockerfile
-sqlfluff lint --dialect postgres ./sql/*.sql
+make lint
 ```
 
 ### Run unit tests
 
 ```shell
-go test -v ./...
-```
-
-### Generate certs
-
-```shell
-brew install mkcert
-mkcert -install
-mkdir -p ./certs
-mkcert -cert-file ./deploy/dev/server.crt.pem -key-file ./deploy/dev/server.key.pem server localhost
+make test
 ```
 
 ### Run locally
 
 ```shell
-docker compose -f ./deploy/dev/docker-compose.yaml up -d --build
+make dev
+export TEST_JWT=$(make jwt)
 grpcurl localhost:8000 list
 grpcurl localhost:8000 describe axon.api.v1.axon
-export TEST_JWT=$(curl -d "client_id=axon" -d "client_secret=ZU4ZKQ6H1sWT6SeB7uh3exUACThJ2Ma3" -d "username=admin" -d "password=${KEYCLOAK_ADMIN_PASSWORD}" -d "grant_type=password" "http://localhost:7080/realms/master/protocol/openid-connect/token" | jq -c -r '.access_token')
 grpcurl -H authorization:"Bearer ${TEST_JWT}" localhost:8000 axon.api.v1.axon/GetVersion
 grpcurl -H authorization:"Bearer ${TEST_JWT}" -d '{"asset_type": 2, "asset_id": "google.com", "attributes": {"test": "a"}}' localhost:8000 axon.api.v1.axon/Observe
-docker compose -f ./deploy/dev/docker-compose.yaml stop
-docker compose -f ./deploy/dev/docker-compose.yaml rm
+grpcurl -H authorization:"Bearer ${TEST_JWT}" -d '{"from": "2025-02-12T20:16:06Z", "to": "2025-02-12T23:20:06Z"}' localhost:8000 axon.api.v1.axon/CountObservations
+grpcurl -H authorization:"Bearer ${TEST_JWT}" -d '{"from": "2025-02-12T20:16:06Z", "to": "2025-02-12T23:20:06Z", "page_size": 100, "page_token": 0}' localhost:8000 axon.api.v1.axon/ListObservations
+make stop
 ```
+
+## TODO
+
+- regexps for assets
+- search filters: https://github.com/grindlemire/go-lucene
+- graph DB
+- geoloc data
+- jobs RPC
+- documentation
+- release
+- myeline

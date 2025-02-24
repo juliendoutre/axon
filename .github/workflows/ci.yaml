@@ -44,11 +44,3 @@ jobs:
         run: pip install sqlfluff==3.3.0
       - name: Lint SQL
         run: sqlfluff lint --dialect postgres ./sql/*.sql
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-      - name: Lint Terraform
-        run: terraform fmt -check ./deploy/dev/
-      - name: Init Terraform
-        run: cd ./deploy/dev && terraform init
-      - name: Validate Terraform
-        run: cd ./deploy/dev && terraform validate
