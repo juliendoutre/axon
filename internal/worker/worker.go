@@ -32,7 +32,7 @@ func (w *Worker) ExtractAssetsFromObservation(ctx workflow.Context, observationI
 	}
 
 	for _, candidate := range extraction.ExtractCandidatesFromStruct(attributes, "$") {
-		for _, asset := range extraction.ListMatches(candidate) {
+		for _, asset := range extraction.ListMatches(candidate.Value) {
 			if err := workflow.ExecuteActivity(ctx, w.InsertExtractedAsset, &InsertExtractedAssetInput{
 				ObservationID:  observationID,
 				AttributesPath: candidate.Path,

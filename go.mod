@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.3.10
+	github.com/aws/aws-sdk-go-v2 v1.36.2
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0

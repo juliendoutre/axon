@@ -36,7 +36,7 @@ make test
 
 ```shell
 make dev
-export TEST_JWT=$(make jwt)
+export TEST_JWT=$(CLIENT_ID=... CLIENT_SECRET=... goidc)
 grpcurl localhost:8000 list
 grpcurl localhost:8000 describe axon.api.v1.axon
 grpcurl -H authorization:"Bearer ${TEST_JWT}" localhost:8000 axon.api.v1.axon/GetVersion
@@ -48,7 +48,6 @@ make stop
 
 ## TODO
 
-- regexps for assets
 - search filters: https://github.com/grindlemire/go-lucene
 - graph DB
 - geoloc data

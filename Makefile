@@ -1,5 +1,3 @@
-include ./deploy/dev/.env
-
 install:
 	brew update
 	brew install protobuf golang-migrate golangci-lint hadolint sqlfluff mkcert grpcurl jq
@@ -25,9 +23,6 @@ certs:
 
 dev: certs
 	docker compose -f ./deploy/dev/docker-compose.yaml up -d --build
-
-jwt:
-	TODO
 
 stop:
 	docker compose -f ./deploy/dev/docker-compose.yaml stop
