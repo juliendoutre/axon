@@ -33,6 +33,7 @@ message ObserveInput {
 message CountObservationsInput {
     google.protobuf.Timestamp from = 1;
     google.protobuf.Timestamp to   = 2;
+    string filter                  = 3;
 }
 
 message CountObservationsOutput {
@@ -42,8 +43,9 @@ message CountObservationsOutput {
 message ListObservationsInput {
     google.protobuf.Timestamp from = 1;
     google.protobuf.Timestamp to   = 2;
-    uint32 page                    = 3;
-    uint32 page_size               = 4;
+    string filter                  = 3;
+    uint32 page                    = 4;
+    uint32 page_size               = 5;
 }
 
 message ListObservationsOutput {

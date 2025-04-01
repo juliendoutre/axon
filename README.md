@@ -48,10 +48,10 @@ make stop
 
 ## TODO
 
-- search filters: https://github.com/grindlemire/go-lucene
 - graph DB
+- policy evaluation
 - geoloc data
 - jobs RPC
 - documentation
 - release
-- myeline
+- myeline (frontend)
