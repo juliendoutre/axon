@@ -18,7 +18,6 @@ test:
 
 certs:
 	mkcert -install
-	mkdir -p ./certs
 	mkcert -cert-file ./deploy/dev/server.crt.pem -key-file ./deploy/dev/server.key.pem server localhost
 
 dev: certs

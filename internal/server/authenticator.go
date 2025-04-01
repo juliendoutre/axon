@@ -19,8 +19,8 @@ type Authenticator struct {
 }
 
 type AuthenticationContext struct {
-	Claims jwt.Claims
-	Method string
+	Claims jwt.Claims `json:"claims"`
+	Method string     `json:"method"`
 }
 
 func (a *Authenticator) Authenticate(
